@@ -1,0 +1,413 @@
+"ID","Title","Module","Priority","Type","Tags","Preconditions","Test Data","Steps","Expected Results","Actual Result","Pass/Fail","Automated Ref"
+"MT-LOGIN-01","Successful login with valid credentials","Login","High","Smoke","@smoke @ui","1. Browser open (Chromium/Chrome recommended).
+2. UI Base URL reachable (https://opensource-demo.orangehrmlive.com).
+3. No active session (fresh incognito or cleared cookies).","Username: Admin
+Password: admin123","1. Navigate to <baseURL>/web/index.php/auth/login.
+2. Enter ""Admin"" in the Username field.
+3. Enter ""admin123"" in the Password field.
+4. Click the Login button.","1. Login page renders (Username, Password, Login button visible).
+2. Username value accepted.
+3. Password value accepted and shown as masked dots.
+4. Within ~20 s the URL contains /dashboard and the dashboard sidebar is visible.","","","tests/ui/login.spec.ts:32"
+"MT-LOGIN-02","Login page is visible on load","Login","Medium","Smoke","@smoke @ui","1. Browser open.
+2. UI Base URL reachable.","(none)","1. Navigate to <baseURL>/web/index.php/auth/login.","1. Username input, Password input and Login button are all visible.","","","tests/ui/login.spec.ts:44"
+"MT-LOGIN-03","Login rejected: wrong password","Login","High","Regression","@regression @ui","1. Browser open (Chromium/Chrome recommended).
+2. UI Base URL reachable (https://opensource-demo.orangehrmlive.com).
+3. No active session (fresh incognito or cleared cookies).","Username: Admin
+Password: wrongpass","1. Navigate to the login page.
+2. Enter ""Admin"" in Username.
+3. Enter ""wrongpass"" in Password.
+4. Click Login.","1. Login page renders.
+2-3. Values accepted (password masked).
+4. Error message contains ""Invalid credentials"". No navigation to /dashboard.","","","tests/ui/login.spec.ts:62"
+"MT-LOGIN-04","Login rejected: wrong username","Login","High","Regression","@regression @ui","1. Browser open (Chromium/Chrome recommended).
+2. UI Base URL reachable (https://opensource-demo.orangehrmlive.com).
+3. No active session (fresh incognito or cleared cookies).","Username: nouser
+Password: admin123","1. Navigate to the login page.
+2. Enter ""nouser"" in Username.
+3. Enter ""admin123"" in Password.
+4. Click Login.","1. Login page renders.
+2-3. Values accepted.
+4. Error message contains ""Invalid credentials"". No navigation to /dashboard.","","","tests/ui/login.spec.ts:62"
+"MT-LOGIN-05","Login rejected: empty username","Login","Medium","Regression","@regression @ui","1. Browser open (Chromium/Chrome recommended).
+2. UI Base URL reachable (https://opensource-demo.orangehrmlive.com).
+3. No active session (fresh incognito or cleared cookies).","Username: (blank)
+Password: admin123","1. Navigate to the login page.
+2. Leave Username blank.
+3. Enter ""admin123"" in Password.
+4. Click Login.","1. Login page renders.
+3. Password value accepted.
+4. ""Required"" validation error is shown under the Username field.","","","tests/ui/login.spec.ts:62"
+"MT-LOGIN-06","Login rejected: empty password","Login","Medium","Regression","@regression @ui","1. Browser open (Chromium/Chrome recommended).
+2. UI Base URL reachable (https://opensource-demo.orangehrmlive.com).
+3. No active session (fresh incognito or cleared cookies).","Username: Admin
+Password: (blank)","1. Navigate to the login page.
+2. Enter ""Admin"" in Username.
+3. Leave Password blank.
+4. Click Login.","1. Login page renders.
+4. ""Required"" validation error is shown under the Password field.","","","tests/ui/login.spec.ts:62"
+"MT-LOGIN-07","Login rejected: both fields empty","Login","Medium","Regression","@regression @ui","1. Browser open (Chromium/Chrome recommended).
+2. UI Base URL reachable (https://opensource-demo.orangehrmlive.com).
+3. No active session (fresh incognito or cleared cookies).","Username: (blank)
+Password: (blank)","1. Navigate to the login page.
+2. Leave Username blank.
+3. Leave Password blank.
+4. Click Login.","1. Login page renders.
+4. ""Required"" validation errors are shown under BOTH fields.","","","tests/ui/login.spec.ts:62"
+"MT-LOGIN-08","SQL injection payload in username is rejected safely","Login","High","Regression","@regression @ui @edge","1. Browser open (Chromium/Chrome recommended).
+2. UI Base URL reachable (https://opensource-demo.orangehrmlive.com).
+3. No active session (fresh incognito or cleared cookies).","Username: ' OR 1=1--
+Password: ' OR 1=1--","1. Navigate to the login page.
+2. Enter ' OR 1=1-- in both Username and Password.
+3. Click Login.","1. Login page renders.
+2. Values accepted as literal text (no client-side interpretation).
+3. No navigation to /dashboard. Error message contains ""Invalid credentials"" (no DB error, no stack trace).","","","tests/ui/login.spec.ts:76"
+"MT-LOGIN-09","XSS payload in username does not execute","Login","High","Regression","@regression @ui @edge","1. Browser open (Chromium/Chrome recommended).
+2. UI Base URL reachable (https://opensource-demo.orangehrmlive.com).
+3. No active session (fresh incognito or cleared cookies).","Username: <script>alert(""xss"")</script>
+Password: anything","1. Open browser DevTools (to observe if any alert() is intercepted).
+2. Navigate to the login page.
+3. Paste <script>alert(""xss"")</script> into Username.
+4. Enter ""anything"" in Password.
+5. Click Login.","2. Login page renders.
+3-4. Values accepted as literal text.
+5. NO JavaScript alert() dialog is shown. No navigation to /dashboard.","","","tests/ui/login.spec.ts:90"
+"MT-LOGIN-10","Direct access to /dashboard without auth redirects to login","Login","High","Regression","@regression @ui @edge @security","1. Browser open.
+2. UI Base URL reachable.
+3. Ability to clear cookies (or use incognito).","(none)","1. Open a fresh incognito window OR clear ALL cookies for the OrangeHRM domain.
+2. Navigate directly to <baseURL>/web/index.php/dashboard/index.","1. Session cleared (no auth cookies).
+2. Within ~15 s the URL is redirected to /auth/login and the Login button is visible.","","","tests/ui/login.spec.ts:130"
+"MT-LOGIN-11","javascript: URL in username is treated as text, does not execute","Login","Medium","Regression","@regression @ui @edge","1. Browser open (Chromium/Chrome recommended).
+2. UI Base URL reachable (https://opensource-demo.orangehrmlive.com).
+3. No active session (fresh incognito or cleared cookies).","Username: javascript:alert('pwned')
+Password: anything","1. Navigate to the login page.
+2. Enter javascript:alert('pwned') in Username.
+3. Enter ""anything"" in Password.
+4. Click Login.","1. Login page renders.
+2. Value accepted as literal text.
+4. No JS alert() dialog. URL does NOT change to javascript: and no navigation to /dashboard. Error message contains ""Invalid credentials"".","","","tests/ui/login.spec.ts:145"
+"MT-DASH-01","Dashboard loads after login","Dashboard","High","Smoke","@smoke @ui","1. Browser open.
+2. UI Base URL reachable.
+3. Valid Admin credentials available (Admin / admin123, or values from .env).","Username: Admin
+Password: admin123","1. Navigate to the login page.
+2. Log in with Admin / admin123.","2. URL contains /dashboard. The left sidebar navigation is visible.","","","tests/ui/dashboard.spec.ts:11"
+"MT-DASH-02","Quick launch widgets are visible","Dashboard","Medium","Sanity","@sanity @ui","1. Browser open.
+2. UI Base URL reachable.
+3. Valid Admin credentials available (Admin / admin123, or values from .env).","Username: Admin
+Password: admin123","1. Log in as Admin.","1. Dashboard renders. At least one Quick Launch card/widget is visible.","","","tests/ui/dashboard.spec.ts:20"
+"MT-DASH-03","User can navigate to PIM via sidebar","Dashboard","Medium","Sanity","@sanity @ui","1. Browser open.
+2. UI Base URL reachable.
+3. Valid Admin credentials available (Admin / admin123, or values from .env).","Username: Admin
+Password: admin123","1. Log in as Admin.
+2. In the left sidebar, click ""PIM"".","1. Dashboard loads.
+2. URL contains /pim. PIM module renders.","","","tests/ui/dashboard.spec.ts:28"
+"MT-DASH-04","Back button after logout does not restore the dashboard","Dashboard","High","Regression","@regression @ui @edge @security","1. Browser open.
+2. UI Base URL reachable.
+3. Valid Admin credentials available (Admin / admin123, or values from .env).","Username: Admin
+Password: admin123","1. Log in as Admin.
+2. Log out (user menu > Logout).
+3. Press the browser Back button.","1. Dashboard.
+2. Redirected to /login.
+3. Within ~15 s the URL becomes /auth/login (auth guard active, bfcache does not restore the dashboard). Login button is visible.","","","tests/ui/dashboard.spec.ts:66"
+"MT-DIR-01","Directory page loads","Directory","High","Smoke","@smoke @ui","1. Browser open.
+2. UI Base URL reachable.
+3. Valid Admin credentials available (Admin / admin123, or values from .env).","Username: Admin
+Password: admin123","1. Log in as Admin.
+2. Navigate to Directory (<baseURL>/web/index.php/directory/viewDirectory).","1. Dashboard loads.
+2. Directory page header text is ""Directory"".","","","tests/ui/directory.spec.ts:16"
+"MT-DIR-02","Directory shows results by default","Directory","Medium","Sanity","@sanity @ui","1. Browser open.
+2. UI Base URL reachable.
+3. Valid Admin credentials available (Admin / admin123, or values from .env).","Username: Admin
+Password: admin123","1. Log in as Admin.
+2. Navigate to Directory.","2. At least one directory result card is rendered.","","","tests/ui/directory.spec.ts:24"
+"MT-DIR-03","Search by name shows only matching employees","Directory","Medium","Sanity","@sanity @ui","1. Browser open.
+2. UI Base URL reachable.
+3. Valid Admin credentials available (Admin / admin123, or values from .env).","The name shown on the first (unfiltered) result card.","1. Log in as Admin.
+2. Navigate to Directory.
+3. Note the name shown on the first result card (e.g. ""Peter Anderson"").
+4. Type that name into the Name search field and submit the search.","2. Directory shows multiple cards.
+4. Filtered list contains ONLY cards whose name equals the searched name. Every card must match; no unmatched names remain.","","","tests/ui/directory.spec.ts:32"
+"MT-DIR-04","Reset restores full directory","Directory","Medium","Sanity","@sanity @ui","1. Browser open.
+2. UI Base URL reachable.
+3. Valid Admin credentials available (Admin / admin123, or values from .env).","Any employee name from the list.","1. Log in as Admin.
+2. Navigate to Directory; note the initial number of cards (N).
+3. Search by any employee name from the list.
+4. Click the Reset button.","2. N cards shown.
+3. Filtered subset shown.
+4. Card count returns to N.","","","tests/ui/directory.spec.ts:53"
+"MT-EMP-01","Employee list page is accessible","Employee Management","High","Smoke","@smoke @ui","1. Browser open.
+2. UI Base URL reachable.
+3. Valid Admin credentials available (Admin / admin123, or values from .env).","Username: Admin
+Password: admin123","1. Log in as Admin.
+2. Navigate to PIM > Employee List (<baseURL>/web/index.php/pim/viewEmployeeList).","2. Employee list page renders. The Search button is visible.","","","tests/ui/employee.spec.ts:17"
+"MT-EMP-02","Employee list has results by default","Employee Management","Medium","Sanity","@sanity @ui","1. Browser open.
+2. UI Base URL reachable.
+3. Valid Admin credentials available (Admin / admin123, or values from .env).","Username: Admin
+Password: admin123","1. Log in as Admin.
+2. Navigate to Employee List.","2. At least one employee row is visible in the results table.","","","tests/ui/employee.spec.ts:25"
+"MT-EMP-03","Search with nonexistent name shows no records","Employee Management","Medium","Regression","@regression @ui","1. Browser open.
+2. UI Base URL reachable.
+3. Valid Admin credentials available (Admin / admin123, or values from .env).","Employee Name: zzz_nonexistent_zzz","1. Log in as Admin.
+2. Navigate to Employee List.
+3. Enter ""zzz_nonexistent_zzz"" into the Employee Name field.
+4. Click Search.","4. Table shows ""No Records Found"" (0 employee rows).","","","tests/ui/employee.spec.ts:33"
+"MT-EMP-04","Add Employee button opens the Add Employee form","Employee Management","Medium","Sanity","@sanity @ui","1. Browser open.
+2. UI Base URL reachable.
+3. Valid Admin credentials available (Admin / admin123, or values from .env).","Username: Admin
+Password: admin123","1. Log in as Admin.
+2. Navigate to Employee List.
+3. Click the ""+ Add"" button.","3. URL contains /pim/addEmployee. First Name and Last Name inputs are visible on the form.","","","tests/ui/employee.spec.ts:59"
+"MT-EMP-05","Search with SQL-injection payload is treated as literal input","Employee Management","High","Regression","@regression @ui @edge","1. Browser open.
+2. UI Base URL reachable.
+3. Valid Admin credentials available (Admin / admin123, or values from .env).","Employee Name: ' OR 1=1 --","1. Log in as Admin.
+2. Navigate to Employee List.
+3. Enter ' OR 1=1 -- into Employee Name.
+4. Click Search.","4. ""No Records Found"" (payload is treated as a literal name; no DB error, no unfiltered dump).","","","tests/ui/employee.spec.ts:75"
+"MT-EMP-06","HTML injection payload in search does not execute","Employee Management","High","Regression","@regression @ui @edge","1. Browser open.
+2. UI Base URL reachable.
+3. Valid Admin credentials available (Admin / admin123, or values from .env).","Employee Name: <img src=x onerror=alert(""xss"")>","1. Open browser DevTools (Console + Elements tab).
+2. Log in as Admin.
+3. Navigate to Employee List.
+4. Enter <img src=x onerror=alert(""xss"")> into Employee Name.
+5. Click Search.","5. No JavaScript alert() dialog fires.
+5. No <img> element with an onerror attribute is injected into the page DOM (verify in DevTools Elements).","","","tests/ui/employee.spec.ts:86"
+"MT-EMP-07","Employee list API 500 does not crash the UI","Employee Management","High","Regression","@regression @ui @edge","1. Browser open.
+2. UI Base URL reachable.
+3. Valid Admin credentials available (Admin / admin123, or values from .env).
+4. Ability to intercept and mock network responses (Chrome DevTools ""Local Overrides"" OR a proxy like Charles/mitmproxy).","Interceptor target: **/api/v2/pim/employees**
+Forced response: HTTP 500, body {""error"":""forced""}","1. Log in as Admin.
+2. Configure your interceptor to return HTTP 500 for any request matching **/api/v2/pim/employees**.
+3. Navigate to (or reload) the Employee List page.","3. Employee list API returns 500 (verify in DevTools Network tab).
+3. Page shell is still interactive (Search button is visible).
+3. Page does NOT white-screen (visible body text > 50 characters).","","","tests/ui/employee.spec.ts:108"
+"MT-MYINFO-01","Personal details are pre-filled","My Info","High","Smoke","@smoke @ui","1. Browser open.
+2. UI Base URL reachable.
+3. Valid Admin credentials available (Admin / admin123, or values from .env).","Username: Admin
+Password: admin123","1. Log in as Admin.
+2. Navigate to My Info (<baseURL>/web/index.php/pim/viewPersonalDetails/empNumber/7).","2. First Name and Last Name input fields both have non-empty values pre-filled.","","","tests/ui/myinfo.spec.ts:16"
+"MT-MYINFO-02","Save personal details shows success toast","My Info","Medium","Sanity","@sanity @ui","1. Browser open.
+2. UI Base URL reachable.
+3. Valid Admin credentials available (Admin / admin123, or values from .env).","Username: Admin
+Password: admin123","1. Log in as Admin.
+2. Navigate to My Info.
+3. Without changing anything, click the Save button in the Personal Details section.","3. A success toast/notification appears within ~10 s.","","","tests/ui/myinfo.spec.ts:25"
+"MT-MYINFO-03","First-name change persists after reload","My Info","High","Regression","@regression @ui @edge","1. Browser open.
+2. UI Base URL reachable.
+3. Valid Admin credentials available (Admin / admin123, or values from .env).
+4. Record the current First Name before starting so you can restore it after.","Modified First Name: QAtest<5-digit-random>","1. Log in as Admin.
+2. Navigate to My Info.
+3. Note the current First Name value (ORIGINAL).
+4. Change First Name to ""QAtest12345"" (any unique value) and click Save.
+5. Wait for the success toast.
+6. Reload the page (F5 / Cmd+R).
+7. CLEANUP: restore First Name to ORIGINAL and Save again.","4. Field accepts the change.
+5. Success toast is visible within ~10 s.
+6. First Name still equals ""QAtest12345"" (change persisted server-side).
+7. First Name reverted to ORIGINAL.","","","tests/ui/myinfo.spec.ts:38"
+"MT-MYINFO-04","Save API 500 does not show a success toast","My Info","High","Regression","@regression @ui @edge","1. Browser open.
+2. UI Base URL reachable.
+3. Valid Admin credentials available (Admin / admin123, or values from .env).
+4. Ability to intercept and mock the PUT /api/v2/pim/employees/{id}/personal-details response.","Interceptor: PUT **/api/v2/pim/employees/**/personal-details -> HTTP 500 {""error"":""forced""}","1. Log in as Admin.
+2. Navigate to My Info.
+3. Configure the interceptor to force HTTP 500 on the PUT save endpoint.
+4. Without changing any field, click Save.","4. Save PUT request returns 500 (verify in DevTools).
+4. NO success toast appears (wait at least 5 s to be sure).
+4. Save button remains enabled; page stays interactive.","","","tests/ui/myinfo.spec.ts:61"
+"MT-PETS-01","POST /pet creates a new pet","Pets API","High","Smoke","@smoke @api","1. Access to API Base URL (https://petstore.swagger.io).
+2. HTTP client available (Postman, curl, HTTPie, etc.).
+3. Content-Type: application/json for POST/PUT requests.","Body: {""id"":<uniqueId>,""name"":""TestPet"",""status"":""available"",""photoUrls"":[]}","1. POST <baseUrl>/v2/pet with the JSON body above.","1. Response 200. Body echoes id/name/status. status = ""available"". Body matches Pet schema (id: number, name: string, status: one of available|pending|sold, photoUrls: array).","","","tests/api/pets.spec.ts:18"
+"MT-PETS-02","GET /pet/{id} retrieves a pet","Pets API","High","Smoke","@smoke @api","1. Access to API Base URL (https://petstore.swagger.io).
+2. HTTP client available (Postman, curl, HTTPie, etc.).
+3. Content-Type: application/json for POST/PUT requests.","Pre-created pet id (from MT-PETS-01 pattern).","1. Create a pet via POST /v2/pet.
+2. GET <baseUrl>/v2/pet/{id}.","1. 200.
+2. 200. Body matches Pet schema. id and name equal the created values.","","","tests/api/pets.spec.ts:37"
+"MT-PETS-03","GET /pet/{id} returns 404 for nonexistent pet","Pets API","Medium","Regression","@regression @api","1. Access to API Base URL (https://petstore.swagger.io).
+2. HTTP client available (Postman, curl, HTTPie, etc.).
+3. Content-Type: application/json for POST/PUT requests.","Random id in 900000000..999999999","1. GET <baseUrl>/v2/pet/<random-id-in-range>.","1. Response 404.","","","tests/api/pets.spec.ts:57"
+"MT-PETS-04","PUT /pet updates an existing pet","Pets API","Medium","Sanity","@sanity @api","1. Access to API Base URL (https://petstore.swagger.io).
+2. HTTP client available (Postman, curl, HTTPie, etc.).
+3. Content-Type: application/json for POST/PUT requests.","PUT body: {...originalPet, ""name"":""UpdatedPetName"",""status"":""sold""}","1. Create a pet via POST /v2/pet.
+2. PUT <baseUrl>/v2/pet with same id but name=""UpdatedPetName"", status=""sold"".","1. 200.
+2. 200. Response body reflects the updated name and status.","","","tests/api/pets.spec.ts:71"
+"MT-PETS-05","DELETE /pet/{id} removes a pet","Pets API","Medium","Sanity","@sanity @api","1. Access to API Base URL (https://petstore.swagger.io).
+2. HTTP client available (Postman, curl, HTTPie, etc.).
+3. Content-Type: application/json for POST/PUT requests.","(none)","1. Create a pet.
+2. DELETE <baseUrl>/v2/pet/{id}.
+3. GET <baseUrl>/v2/pet/{id}.","1. 200.
+2. 200.
+3. 404.","","","tests/api/pets.spec.ts:92"
+"MT-PETS-06","GET /pet/findByStatus returns ""available"" pet","Pets API","Medium","Sanity","@sanity @api","1. Access to API Base URL (https://petstore.swagger.io).
+2. HTTP client available (Postman, curl, HTTPie, etc.).
+3. Content-Type: application/json for POST/PUT requests.","status = available","1. POST /v2/pet with status=""available"".
+2. GET <baseUrl>/v2/pet/findByStatus?status=available.","1. 200.
+2. 200. Response array includes the pet just created. EVERY item in the response has status=""available"".","","","tests/api/pets.spec.ts:110"
+"MT-PETS-07","GET /pet/findByStatus returns ""pending"" pet","Pets API","Medium","Sanity","@sanity @api","1. Access to API Base URL (https://petstore.swagger.io).
+2. HTTP client available (Postman, curl, HTTPie, etc.).
+3. Content-Type: application/json for POST/PUT requests.","status = pending","1. POST /v2/pet with status=""pending"".
+2. GET <baseUrl>/v2/pet/findByStatus?status=pending.","1. 200.
+2. 200. Response array includes the pet just created. EVERY item has status=""pending"".","","","tests/api/pets.spec.ts:110"
+"MT-PETS-08","GET /pet/findByStatus returns ""sold"" pet","Pets API","Medium","Sanity","@sanity @api","1. Access to API Base URL (https://petstore.swagger.io).
+2. HTTP client available (Postman, curl, HTTPie, etc.).
+3. Content-Type: application/json for POST/PUT requests.","status = sold","1. POST /v2/pet with status=""sold"".
+2. GET <baseUrl>/v2/pet/findByStatus?status=sold.","1. 200.
+2. 200. Response array includes the pet just created. EVERY item has status=""sold"".","","","tests/api/pets.spec.ts:110"
+"MT-PETS-09","POST /pet returns 4xx/500 for invalid input","Pets API","Medium","Regression","@regression @api","1. Access to API Base URL (https://petstore.swagger.io).
+2. HTTP client available (Postman, curl, HTTPie, etc.).
+3. Content-Type: application/json for POST/PUT requests.","Body: the literal string ""not-valid-json"" sent as request body.","1. POST <baseUrl>/v2/pet with body ""not-valid-json"" (invalid JSON structure for a Pet).","1. Response status is one of 400, 405, or 500.","","","tests/api/pets.spec.ts:133"
+"MT-PETS-10","Created pet has correct category","Pets API","Medium","Sanity","@sanity @api","1. Access to API Base URL (https://petstore.swagger.io).
+2. HTTP client available (Postman, curl, HTTPie, etc.).
+3. Content-Type: application/json for POST/PUT requests.","Body includes: ""category"": {""id"":5,""name"":""Cats""}","1. POST /v2/pet with category.name = ""Cats"".
+2. GET /v2/pet/{id}.","2. body.category.name = ""Cats"".","","","tests/api/pets.spec.ts:146"
+"MT-PETS-11","Created pet has correct tags","Pets API","Medium","Sanity","@sanity @api","1. Access to API Base URL (https://petstore.swagger.io).
+2. HTTP client available (Postman, curl, HTTPie, etc.).
+3. Content-Type: application/json for POST/PUT requests.","Body includes: ""tags"":[{""id"":99,""name"":""mytag""}]","1. POST /v2/pet with tags = [{id:99, name:""mytag""}].
+2. GET /v2/pet/{id}.","2. body.tags[0].name = ""mytag"".","","","tests/api/pets.spec.ts:168"
+"MT-PETS-12","Pet name with unicode + emoji is preserved verbatim","Pets API","Medium","Regression","@regression @api @edge","1. Access to API Base URL (https://petstore.swagger.io).
+2. HTTP client available (Postman, curl, HTTPie, etc.).
+3. Content-Type: application/json for POST/PUT requests.","name = Café-日本語-🐶-Ünïcödé","1. POST /v2/pet with name = ""Café-日本語-🐶-Ünïcödé"".
+2. GET /v2/pet/{id}.","2. body.name equals the exact unicode string, character-for-character (no encoding drift, no emoji stripping).","","","tests/api/pets.spec.ts:194"
+"MT-PETS-13","Pet name of 5000 chars is accepted and preserved","Pets API","Medium","Regression","@regression @api @edge","1. Access to API Base URL (https://petstore.swagger.io).
+2. HTTP client available (Postman, curl, HTTPie, etc.).
+3. Content-Type: application/json for POST/PUT requests.","name = ""A"" repeated 5000 times","1. POST /v2/pet with a name of exactly 5000 ""A"" characters.
+2. GET /v2/pet/{id}.","2. body.name.length equals 5000 (no silent truncation).","","","tests/api/pets.spec.ts:213"
+"MT-PETS-14","GET /pet/{non-numeric} returns 4xx, never 5xx","Pets API","Medium","Regression","@regression @api @edge","1. Access to API Base URL (https://petstore.swagger.io).
+2. HTTP client available (Postman, curl, HTTPie, etc.).
+3. Content-Type: application/json for POST/PUT requests.","Path segment: not-a-number","1. GET <baseUrl>/v2/pet/not-a-number.","1. Response status is 4xx (>=400 and <500). NOT 5xx.","","","tests/api/pets.spec.ts:232"
+"MT-PETS-15","Sequential PUTs — last write wins","Pets API","High","Regression","@regression @api @edge","1. Access to API Base URL (https://petstore.swagger.io).
+2. HTTP client available (Postman, curl, HTTPie, etc.).
+3. Content-Type: application/json for POST/PUT requests.","(none)","1. Create a pet.
+2. PUT /v2/pet with name = ""FirstUpdate"".
+3. PUT /v2/pet with name = ""SecondUpdate"".
+4. GET /v2/pet/{id}.","2. 200.
+3. 200.
+4. body.name = ""SecondUpdate"" (last write wins).","","","tests/api/pets.spec.ts:246"
+"MT-PETS-16","findByStatus with invalid enum returns 200 (documented quirk)","Pets API","Low","Regression","@regression @api @edge","1. Access to API Base URL (https://petstore.swagger.io).
+2. HTTP client available (Postman, curl, HTTPie, etc.).
+3. Content-Type: application/json for POST/PUT requests.","status = notARealStatus","1. GET <baseUrl>/v2/pet/findByStatus?status=notARealStatus.","1. Response 200 with an array body (empty or otherwise). Documented Petstore quirk — this test locks in current behavior.","","","tests/api/pets.spec.ts:266"
+"MT-PETS-17","POST /pet with HTML markup as name is stored verbatim","Pets API","Medium","Regression","@regression @api @edge","1. Access to API Base URL (https://petstore.swagger.io).
+2. HTTP client available (Postman, curl, HTTPie, etc.).
+3. Content-Type: application/json for POST/PUT requests.","name = <script>alert('xss')</script>","1. POST /v2/pet with name = ""<script>alert('xss')</script>"".
+2. GET /v2/pet/{id}.","2. body.name equals the literal payload (no server-side stripping or encoding). NOTE: this only proves storage behavior; actual XSS risk depends on how a consuming UI renders the value.","","","tests/api/pets.spec.ts:284"
+"MT-STORE-01","GET /store/inventory returns inventory map","Store API","High","Smoke","@smoke @api","1. Access to API Base URL (https://petstore.swagger.io).
+2. HTTP client available (Postman, curl, HTTPie, etc.).
+3. Content-Type: application/json for POST/PUT requests.","(none)","1. GET <baseUrl>/v2/store/inventory.","1. Response 200. Body is a non-null object; every value in the map is a number.","","","tests/api/store.spec.ts:19"
+"MT-STORE-02","POST /store/order places an order","Store API","High","Smoke","@smoke @api","1. Access to API Base URL (https://petstore.swagger.io).
+2. HTTP client available (Postman, curl, HTTPie, etc.).
+3. Content-Type: application/json for POST/PUT requests.","Order body: {""id"":<orderId>,""petId"":<petId>,""quantity"":1,""status"":""placed"",""complete"":false}","1. Create a pet via POST /v2/pet.
+2. POST <baseUrl>/v2/store/order with the order body above.","1. 200.
+2. 200. Body matches Order schema; id and petId echoed; status = ""placed"".","","","tests/api/store.spec.ts:37"
+"MT-STORE-03","GET /store/order/{id} retrieves an order","Store API","Medium","Sanity","@sanity @api","1. Access to API Base URL (https://petstore.swagger.io).
+2. HTTP client available (Postman, curl, HTTPie, etc.).
+3. Content-Type: application/json for POST/PUT requests.","(none)","1. Create pet + place order.
+2. GET <baseUrl>/v2/store/order/{id}.","2. 200. Body matches Order schema; id matches.","","","tests/api/store.spec.ts:60"
+"MT-STORE-04","GET /store/order/{id} returns 404 for nonexistent order","Store API","Medium","Regression","@regression @api","1. Access to API Base URL (https://petstore.swagger.io).
+2. HTTP client available (Postman, curl, HTTPie, etc.).
+3. Content-Type: application/json for POST/PUT requests.","Random id in 900000..999999","1. GET <baseUrl>/v2/store/order/<random-id-in-range>.","1. Response 404.","","","tests/api/store.spec.ts:81"
+"MT-STORE-05","DELETE /store/order/{id} deletes an order","Store API","Medium","Sanity","@sanity @api","1. Access to API Base URL (https://petstore.swagger.io).
+2. HTTP client available (Postman, curl, HTTPie, etc.).
+3. Content-Type: application/json for POST/PUT requests.","(none)","1. Create pet + place order.
+2. DELETE <baseUrl>/v2/store/order/{id}.
+3. GET <baseUrl>/v2/store/order/{id}.","2. 200.
+3. 404.","","","tests/api/store.spec.ts:94"
+"MT-STORE-06","Inventory counts a pet with a new status","Store API","Medium","Sanity","@sanity @api","1. Access to API Base URL (https://petstore.swagger.io).
+2. HTTP client available (Postman, curl, HTTPie, etc.).
+3. Content-Type: application/json for POST/PUT requests.","status = qa-status-<random> (a status no other pet uses)","1. POST /v2/pet with status = ""qa-status-<random-int>"".
+2. GET <baseUrl>/v2/store/inventory.","2. body[""qa-status-<random>""] = 1 (only the pet you just created has this status).","","","tests/api/store.spec.ts:113"
+"MT-STORE-07","Order quantity is preserved","Store API","Medium","Sanity","@sanity @api","1. Access to API Base URL (https://petstore.swagger.io).
+2. HTTP client available (Postman, curl, HTTPie, etc.).
+3. Content-Type: application/json for POST/PUT requests.","Order quantity: 5","1. Create pet.
+2. POST /v2/store/order with quantity = 5.
+3. GET /v2/store/order/{id}.","3. body.quantity = 5.","","","tests/api/store.spec.ts:132"
+"MT-STORE-08","DELETE order twice — second call returns 404","Store API","Medium","Regression","@regression @api @edge","1. Access to API Base URL (https://petstore.swagger.io).
+2. HTTP client available (Postman, curl, HTTPie, etc.).
+3. Content-Type: application/json for POST/PUT requests.","(none)","1. Create pet + place order.
+2. DELETE the order.
+3. DELETE the same order id again.","2. 200.
+3. 404.","","","tests/api/store.spec.ts:155"
+"MT-STORE-09","Order with negative quantity is either rejected or coerced","Store API","High","Regression","@regression @api @edge","1. Access to API Base URL (https://petstore.swagger.io).
+2. HTTP client available (Postman, curl, HTTPie, etc.).
+3. Content-Type: application/json for POST/PUT requests.
+4. KNOWN FAIL: Petstore currently accepts and stores negative quantities as-is (documented defect).","quantity = -5","1. Create pet.
+2. POST /v2/store/order with quantity = -5.
+3. If step 2 returned 200, GET /v2/store/order/{id} and inspect quantity.","2. EITHER 4xx (rejected) OR 200.
+3. If 200 in step 2: body.quantity >= 0 (coerced, not stored verbatim).
+CURRENT BEHAVIOR: Petstore returns 200 with body.quantity = -5 -> this case FAILS as expected.","","","tests/api/store.spec.ts:174"
+"MT-STORE-10","Order shipDate is preserved to the millisecond","Store API","Medium","Regression","@regression @api @edge","1. Access to API Base URL (https://petstore.swagger.io).
+2. HTTP client available (Postman, curl, HTTPie, etc.).
+3. Content-Type: application/json for POST/PUT requests.","shipDate = 2025-06-15T12:34:56.789Z","1. Create pet + place order with shipDate = ""2025-06-15T12:34:56.789Z"".
+2. GET the order.","2. new Date(body.shipDate).getTime() equals new Date(""2025-06-15T12:34:56.789Z"").getTime() (millisecond precision preserved).","","","tests/api/store.spec.ts:202"
+"MT-USERS-01","POST /user creates a user","Users API","High","Smoke","@smoke @api","1. Access to API Base URL (https://petstore.swagger.io).
+2. HTTP client available (Postman, curl, HTTPie, etc.).
+3. Content-Type: application/json for POST/PUT requests.","User body: {""id"":<int>,""username"":""<unique>"",""firstName"":""..."",""lastName"":""..."",""email"":""..."",""password"":""..."",""phone"":""..."",""userStatus"":0}","1. POST <baseUrl>/v2/user with the user body.
+2. GET <baseUrl>/v2/user/{username}.","1. 200.
+2. 200. Body matches User schema. id, username, email match what was posted.","","","tests/api/users.spec.ts:21"
+"MT-USERS-02","GET /user/{username} retrieves a user","Users API","High","Smoke","@smoke @api","1. Access to API Base URL (https://petstore.swagger.io).
+2. HTTP client available (Postman, curl, HTTPie, etc.).
+3. Content-Type: application/json for POST/PUT requests.","(none)","1. Create a user (POST /v2/user).
+2. GET /v2/user/{username}.","2. 200. Body matches User schema; username and email match.","","","tests/api/users.spec.ts:40"
+"MT-USERS-03","GET /user/{username} returns 404 for nonexistent user","Users API","Medium","Regression","@regression @api","1. Access to API Base URL (https://petstore.swagger.io).
+2. HTTP client available (Postman, curl, HTTPie, etc.).
+3. Content-Type: application/json for POST/PUT requests.","username = zzz_no_such_user_xyzxyz","1. GET <baseUrl>/v2/user/zzz_no_such_user_xyzxyz.","1. Response 404.","","","tests/api/users.spec.ts:60"
+"MT-USERS-04","PUT /user/{username} updates user details","Users API","Medium","Sanity","@sanity @api","1. Access to API Base URL (https://petstore.swagger.io).
+2. HTTP client available (Postman, curl, HTTPie, etc.).
+3. Content-Type: application/json for POST/PUT requests.","PUT body: {...originalUser, ""firstName"":""Updated"", ""email"":""updated.<original>""}","1. Create a user.
+2. PUT /v2/user/{username} with new firstName = ""Updated"" and modified email.
+3. GET /v2/user/{username}.","3. body.firstName = ""Updated"" and body.email equals the new email.","","","tests/api/users.spec.ts:73"
+"MT-USERS-05","DELETE /user/{username} removes user","Users API","Medium","Sanity","@sanity @api","1. Access to API Base URL (https://petstore.swagger.io).
+2. HTTP client available (Postman, curl, HTTPie, etc.).
+3. Content-Type: application/json for POST/PUT requests.","(none)","1. Create a user.
+2. DELETE /v2/user/{username}.
+3. GET /v2/user/{username}.","2. 200.
+3. 404.","","","tests/api/users.spec.ts:93"
+"MT-USERS-06","GET /user/login returns session token","Users API","Medium","Sanity","@sanity @api","1. Access to API Base URL (https://petstore.swagger.io).
+2. HTTP client available (Postman, curl, HTTPie, etc.).
+3. Content-Type: application/json for POST/PUT requests.","Query params: username=<known>, password=<known>","1. Create a user with a known password.
+2. GET <baseUrl>/v2/user/login?username={u}&password={p}.","2. 200. body.message is a string containing ""logged in"".","","","tests/api/users.spec.ts:110"
+"MT-USERS-07","POST /user/createWithArray creates multiple users","Users API","Medium","Sanity","@sanity @api","1. Access to API Base URL (https://petstore.swagger.io).
+2. HTTP client available (Postman, curl, HTTPie, etc.).
+3. Content-Type: application/json for POST/PUT requests.","Body: JSON array of two unique users.","1. POST <baseUrl>/v2/user/createWithArray with an array of two users.
+2. For each user, GET /v2/user/{username}.","1. 200.
+2. Both users are readable. Each body matches User schema and echoes username/email.","","","tests/api/users.spec.ts:131"
+"MT-USERS-08","POST /user/createWithList creates multiple users","Users API","Medium","Sanity","@sanity @api","1. Access to API Base URL (https://petstore.swagger.io).
+2. HTTP client available (Postman, curl, HTTPie, etc.).
+3. Content-Type: application/json for POST/PUT requests.","Body: JSON array of two unique users.","1. POST <baseUrl>/v2/user/createWithList with an array of two users.
+2. For each user, GET /v2/user/{username}.","1. 200.
+2. Both users are readable. Each body matches User schema and echoes username/email.","","","tests/api/users.spec.ts:131"
+"MT-USERS-09","Created user has correct phone number","Users API","Medium","Sanity","@sanity @api","1. Access to API Base URL (https://petstore.swagger.io).
+2. HTTP client available (Postman, curl, HTTPie, etc.).
+3. Content-Type: application/json for POST/PUT requests.","phone = ""999-8888""","1. POST /v2/user with phone = ""999-8888"".
+2. GET /v2/user/{username}.","2. body.phone = ""999-8888"".","","","tests/api/users.spec.ts:152"
+"MT-USERS-10","User status is preserved","Users API","Medium","Sanity","@sanity @api","1. Access to API Base URL (https://petstore.swagger.io).
+2. HTTP client available (Postman, curl, HTTPie, etc.).
+3. Content-Type: application/json for POST/PUT requests.","userStatus = 1","1. POST /v2/user with userStatus = 1.
+2. GET /v2/user/{username}.","2. body.userStatus = 1.","","","tests/api/users.spec.ts:171"
+"MT-USERS-11","Login with wrong password is rejected","Users API","High","Regression","@regression @api @edge @security","1. Access to API Base URL (https://petstore.swagger.io).
+2. HTTP client available (Postman, curl, HTTPie, etc.).
+3. Content-Type: application/json for POST/PUT requests.
+4. KNOWN FAIL: Petstore /user/login returns 200 ""logged in user session"" for ANY password (documented defect).","Query params: username=<known>, password=definitely-wrong-password","1. Create a user.
+2. GET <baseUrl>/v2/user/login?username={u}&password=definitely-wrong-password.","2. Response status is 4xx (authentication failure).
+CURRENT BEHAVIOR: Petstore returns 200 with message ""logged in user session"" -> this case FAILS as expected.","","","tests/api/users.spec.ts:192"
+"MT-USERS-12","GET /user response never exposes password field","Users API","High","Regression","@regression @api @edge @security","1. Access to API Base URL (https://petstore.swagger.io).
+2. HTTP client available (Postman, curl, HTTPie, etc.).
+3. Content-Type: application/json for POST/PUT requests.
+4. KNOWN FAIL: Petstore GET /user/{username} returns the plaintext password (documented defect).","password = SuperSecret!2025","1. POST /v2/user with password = ""SuperSecret!2025"".
+2. GET /v2/user/{username}.
+3. Inspect the raw JSON body string.","2. body.password is undefined.
+3. Raw JSON does not contain the string ""SuperSecret!2025"".
+CURRENT BEHAVIOR: password is returned in the body -> this case FAILS as expected.","","","tests/api/users.spec.ts:213"
+"MT-USERS-13","POST /user with duplicate username — documented behavior","Users API","Low","Regression","@regression @api @edge","1. Access to API Base URL (https://petstore.swagger.io).
+2. HTTP client available (Postman, curl, HTTPie, etc.).
+3. Content-Type: application/json for POST/PUT requests.","(none)","1. Create a user.
+2. POST the exact same user again.","2. Response is 200 OR 409 (Petstore currently accepts duplicates; this case locks in behavior).","","","tests/api/users.spec.ts:237"
+"MT-USERS-14","GET /user/{URL-unsafe chars} returns a clean 4xx, not 5xx","Users API","Medium","Regression","@regression @api @edge","1. Access to API Base URL (https://petstore.swagger.io).
+2. HTTP client available (Postman, curl, HTTPie, etc.).
+3. Content-Type: application/json for POST/PUT requests.","username (URL-encoded): ""user with space & symbol"" -> user%20with%20space%20%26%20symbol","1. GET <baseUrl>/v2/user/user%20with%20space%20%26%20symbol.","1. Response status is 4xx (>=400 and <500). NOT 5xx.","","","tests/api/users.spec.ts:254"
+"MT-USERS-15","POST /user with CRLF payload does not inject response headers","Users API","High","Regression","@regression @api @edge @security","1. Access to API Base URL (https://petstore.swagger.io).
+2. HTTP client available (Postman, curl, HTTPie, etc.).
+3. Content-Type: application/json for POST/PUT requests.","username = ""evil\r\nSet-Cookie: hacked=1""
+firstName = ""evil\r\nX-Injected: 1""","1. POST /v2/user with a body containing raw CRLF sequences inside string fields:
+   username: ""evil\r\nSet-Cookie: hacked=1""
+   firstName: ""evil\r\nX-Injected: 1""
+2. Inspect the response status and headers.","2. Response status is <500 (not a server crash).
+2. Response headers do NOT contain ""set-cookie: hacked=1"".
+2. Response headers do NOT contain any ""x-injected"" header (attacker cannot smuggle response headers via user input).","","","tests/api/users.spec.ts:268"

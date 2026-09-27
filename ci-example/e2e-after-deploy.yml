@@ -1,0 +1,78 @@
+# EXAMPLE ONLY — this file does not run in this repo.
+#
+# Copy it into the repo of the application under test (website or API) as
+#   .github/workflows/e2e-after-deploy.yml
+# and adjust the parts marked TODO.
+#
+# Flow: dev pushes → app is built + deployed to a test environment → this framework
+# runs against that deployment → pass/fail shows on the dev's commit/PR.
+# Make the "e2e" check required in branch protection to block merges on failure.
+
+name: E2E after deploy
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+env:
+  # TODO: the repo that contains this test framework
+  TESTS_REPO: your-org/homeassignment
+  # TODO: 'ui' in the website repo, 'api' in the API repo
+  TEST_PROJECT: ui
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    outputs:
+      url: ${{ steps.deploy.outputs.url }}
+    steps:
+      - uses: actions/checkout@v4
+      # TODO: replace with the app's real build + deploy to a staging/preview environment.
+      # The step must output the URL of the deployment it just made.
+      - id: deploy
+        run: |
+          echo "Build and deploy the app here"
+          echo "url=https://staging.example.com" >> "$GITHUB_OUTPUT"
+
+  e2e:
+    needs: deploy
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Fail if no deployment URL
+        # Never fall back to the framework's default URLs — that would test the wrong system
+        run: test -n "${{ needs.deploy.outputs.url }}" || { echo "deploy job produced no url"; exit 1; }
+
+      - uses: actions/checkout@v4
+        with:
+          repository: ${{ env.TESTS_REPO }}
+          # Only needed if the tests repo is private: a GitHub App / fine-grained token
+          # with read access to that one repo, stored as a secret in the app repo.
+          token: ${{ secrets.TESTS_REPO_TOKEN || github.token }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - if: env.TEST_PROJECT == 'ui'
+        run: npx playwright install --with-deps chromium
+
+      - run: npx playwright test --project=${{ env.TEST_PROJECT }}
+        env:
+          # Only the variable for the chosen project is used; setting both is harmless
+          UI_BASE_URL: ${{ needs.deploy.outputs.url }}
+          API_BASE_URL: ${{ needs.deploy.outputs.url }}
+          # TODO: test-environment credentials (UI only), stored as secrets in the app repo
+          ORANGEHRM_USERNAME: ${{ secrets.E2E_USERNAME }}
+          ORANGEHRM_PASSWORD: ${{ secrets.E2E_PASSWORD }}
+
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: e2e-report-${{ env.TEST_PROJECT }}
+          path: playwright-report/
+          retention-days: 14
